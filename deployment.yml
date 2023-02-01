@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-client-server
+spec:
+  selector:
+    matchLabels:
+      name: go-client-server
+  template:
+    metadata:
+      labels:
+        name: go-client-server
+    spec:
+      containers:
+      - name: reader
+        image: divjot/go-reader
+        imagePullPolicy: Never
+      - name: writer
+        image: divjot/go-writer
+        imagePullPolicy: Never
