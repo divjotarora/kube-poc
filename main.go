@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 const (
@@ -33,40 +35,38 @@ func main() {
 }
 
 func writer() error {
+	var conn net.Conn
+	var err error
+	for i := 0; i < 10; i++ {
+		conn, err = net.Dial("tcp", networkAddr)
+		if err != nil {
+			log.Printf("connection establishment error: %v\n", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = conn.Close()
+		if err != nil {
+			log.Printf("connection close error: %v\n", err)
+		}
+	}()
+
+	log.Printf("writing")
+	msg := []byte("hello\n")
+	n, err := conn.Write(msg)
+	if err != nil {
+		return err
+	}
+	if n != len(msg) {
+		return fmt.Errorf("expected to write %d bytes but wrote %d\n", len(msg), n)
+	}
 	return nil
-
-	// var conn net.Conn
-	// var err error
-	// for i := 0; i < 10; i++ {
-	// 	conn, err = net.Dial("tcp", networkAddr)
-	// 	if err != nil {
-	// 		log.Printf("connection establishment error: %v\n", err)
-	// 		time.Sleep(1 * time.Second)
-	// 		continue
-	// 	}
-	// 	break
-	// }
-	// if err != nil {
-	// 	return err
-	// }
-
-	// defer func() {
-	// 	err = conn.Close()
-	// 	if err != nil {
-	// 		log.Printf("connection close error: %v\n", err)
-	// 	}
-	// }()
-
-	// log.Printf("writing")
-	// msg := []byte("hello\n")
-	// n, err := conn.Write(msg)
-	// if err != nil {
-	// 	return err
-	// }
-	// if n != len(msg) {
-	// 	return fmt.Errorf("expected to write %d bytes but wrote %d\n", len(msg), n)
-	// }
-	// return nil
 }
 
 func reader() error {
