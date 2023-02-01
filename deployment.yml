@@ -1,13 +1,23 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
   name: go-client-server
 spec:
+  volumes:
+    - name: shared-volume
+      emptyDir: {}
+
   containers:
     - name: reader
       image: go-reader
       imagePullPolicy: Never
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /tmp
     - name: writer
       image: go-writer
       imagePullPolicy: Never
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /tmp

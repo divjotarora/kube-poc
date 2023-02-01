@@ -1,18 +1,16 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
-	"net"
+	"os"
 	"time"
 )
 
 const (
-	networkAddr = "localhost:8080"
+	fileName = "/tmp/foo.json"
 )
 
 func main() {
@@ -35,70 +33,55 @@ func main() {
 }
 
 func writer() error {
-	var conn net.Conn
-	var err error
-	for i := 0; i < 10; i++ {
-		conn, err = net.Dial("tcp", networkAddr)
-		if err != nil {
-			log.Printf("connection establishment error: %v\n", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		break
-	}
+	log.Printf("creating file")
+	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
-		err = conn.Close()
-		if err != nil {
-			log.Printf("connection close error: %v\n", err)
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file in writer: %v", err)
 		}
 	}()
 
-	log.Printf("writing")
-	msg := []byte("hello\n")
-	n, err := conn.Write(msg)
+	msg := []byte("hello")
+	n, err := file.Write(msg)
 	if err != nil {
 		return err
 	}
 	if n != len(msg) {
-		return fmt.Errorf("expected to write %d bytes but wrote %d\n", len(msg), n)
+		return fmt.Errorf("expected to write %d bytes but only wrote %d", len(msg), n)
 	}
 	return nil
 }
 
 func reader() error {
-	listener, err := net.Listen("tcp", networkAddr)
+	log.Printf("opening file with backoff")
+	var file *os.File
+	var err error
+	for i := 0; i < 10; i++ {
+		file, err = os.Open(fileName)
+		if err == nil {
+			break
+		}
+
+		log.Printf("error opening file: %v", err)
+		time.Sleep(1 * time.Second)
+	}
+	if err != nil {
+		return fmt.Errorf("error opening file in reader: %w", err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file in reader: %v", err)
+		}
+	}()
+
+	res, err := io.ReadAll(file)
 	if err != nil {
 		return err
 	}
-	defer listener.Close()
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err = conn.Close()
-			if err != nil {
-				log.Printf("connection close error: %v\n", err)
-			}
-		}()
-
-		log.Printf("accepted conn, reading")
-		msg, err := bufio.NewReader(conn).ReadString('\n')
-		if err != nil && !errors.Is(err, io.EOF) {
-			return err
-		}
-
-		log.Printf("read msg from conn: %v\n", msg)
-		if len(msg) > 0 {
-			break
-		}
-	}
+	log.Printf("read from file: %s", res)
 
 	return nil
 }

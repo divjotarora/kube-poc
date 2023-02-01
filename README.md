@@ -17,8 +17,7 @@ $ kubectl apply -f deployment.yml
 
 $ kubectl get pods -A
 
-// Copy the name of the pod that looks like "go-client-server"
-$ kubectl logs <pod_name> --all-containers
+$ kubectl logs go-client-server --all-containers
 
 // Should see something like:
 2023/02/01 20:38:24 accepted conn, reading
