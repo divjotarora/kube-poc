@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: go-client-server
+  name: go-named-pipes
 spec:
   volumes:
     - name: shared-volume
@@ -10,14 +10,16 @@ spec:
 
   containers:
     - name: pipes-client
-      image: pipes-client
+      image: named-pipes-poc
       imagePullPolicy: Never
       volumeMounts:
         - name: shared-volume
           mountPath: /tmp
     - name: pipes-server
-      image: pipes-server
+      image: named-pipes-poc
       imagePullPolicy: Never
       volumeMounts:
         - name: shared-volume
           mountPath: /tmp
+      command: ["./mongodb-linux-aarch64-ubuntu2004-6.2.0/bin/mongod"]
+      args: ["--dbpath", "mongodb-data", "--logpath", "mongod.log", "--bind_ip", "localhost", "--port", "27017", "--setParameter", "enableComputeMode=true"]
