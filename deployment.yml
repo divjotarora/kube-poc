@@ -9,14 +9,14 @@ spec:
       emptyDir: {}
 
   containers:
-    - name: reader
-      image: go-reader
+    - name: pipes-client
+      image: pipes-client
       imagePullPolicy: Never
       volumeMounts:
         - name: shared-volume
           mountPath: /tmp
-    - name: writer
-      image: go-writer
+    - name: pipes-server
+      image: pipes-server
       imagePullPolicy: Never
       volumeMounts:
         - name: shared-volume

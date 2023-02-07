@@ -9,9 +9,12 @@ $ minikube start
 // to push them to something like Docker Hub.
 $ eval $(minikube -p minikube docker-env)
 
-$ docker build --no-cache -f Dockerfile --target build_reader -t go-reader .
+$ docker build --no-cache -f Dockerfile --target build_client -t pipes-client .
 
-$ docker build --no-cache -f Dockerfile --target build_writer -t go-writer .
+$ docker build --no-cache -f Dockerfile --target build_server -t pipes-server .
+
+// Verify that the images show up as expected.
+$ docker images
 
 $ kubectl apply -f deployment.yml
 
@@ -19,12 +22,31 @@ $ kubectl get pods -A
 
 $ kubectl logs go-client-server --all-containers
 
-// Should see something like:
-2023/02/01 20:38:24 accepted conn, reading
-2023/02/01 20:38:24 read msg from conn: hello
-
-2023/02/01 20:38:24 writing
-
 // Stop the client/server pod.
 $ kubectl delete -f deployment.yml
+```
+
+The `kubectl logs...` command should output something like this:
+```
+opening file
+making aggregate request
+file is opened
+waiting to write
+write succesful
+waiting to write
+write succesful
+waiting to write
+write succesful
+waiting to write
+write succesful
+waiting to write
+write succesful
+cursor returned
+ready to read
+{"a": {"$numberInt":"1"}}
+{"a": {"$numberInt":"1"}}
+{"a": {"$numberInt":"1"}}
+{"a": {"$numberInt":"1"}}
+{"a": {"$numberInt":"1"}}
+{"t":{"$date":"2023-02-04T06:34:07.639Z"},"s":"I",  "c":"CONTROL",  "id":5760901, "ctx":"main","msg":"Applied --setParameter options","attr":{"serverParameters":{"enableComputeMode":{"default":false,"value":true}}}}
 ```
